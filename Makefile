@@ -26,7 +26,7 @@ build: inputrc
 develop: inputrc
 	$(PIP) install -e .
 
-#: Make distirbution: wheels, eggs, tarball
+#: Make distirbution: wheel and tarball
 dist:
 	./admin-tools/make-dist.sh
 
