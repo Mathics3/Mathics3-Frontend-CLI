@@ -12,7 +12,7 @@ name = "Mathics3_script"
 description = "Command-line interface to Mathics3"
 dependencies = [
     "Mathics3_Scanner>=10.0.0",
-    "Mathics3 >= 10.0.0",
+    "Mathics3 >= 10.0.1",
     "click >= 8.0.0",
     "colorama",
     "columnize",
