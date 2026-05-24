@@ -1,10 +1,11 @@
-name: mathicsscript (Windows)
+---
+name: Mathics3 script (MS Windows)
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 jobs:
   build:
@@ -14,30 +15,34 @@ jobs:
         os: [windows]
         python-version: ['3.12', '3.14']
     steps:
-    - uses: actions/checkout@v6
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python3 -m pip install --upgrade pip
-        python3 -m pip install wheel setuptools
-        set LLVM_DIR="C:\Program Files\LLVM"
-        # We can comment out after next Mathics-Scanner release
-        # git clone --depth 1 https://github.com/Mathics3/Mathics3-scanner.git
-        # cd Mathics3-scanner/
-        # pip install --no-build-isolation -e .
-        # bash -x admin-tools/make-JSON-tables.sh
-        # cd ..
-        # We can comment out after next Mathics3-pygments release
-        # python -m pip install -e git+https://github.com/Mathics3/Mathics3-pygments#egg=Mathics3-pygments
-        # We can comment out after next mathics-core release
-        pip install git+https://github.com/Mathics3/mathics-core.git
-    - name: Install mathicsscript
-      run: |
-        make
-    - name: Test mathicsscript
-      run: |
-        pip3 install -r requirements-dev.txt
-        make check
+      - uses: actions/checkout@v6
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel setuptools
+          set LLVM_DIR="C:\Program Files\LLVM"
+          # We can comment out after next Mathics-Scanner release
+          # git clone --depth 1 https://github.com/Mathics3/Mathics3-scanner.git
+          # cd Mathics3-scanner/
+          # pip install --no-build-isolation -e .
+          # bash -x admin-tools/make-JSON-tables.sh
+          # cd ..
+          # We can comment out after next Mathics3-pygments release
+          # python -m pip install -e git+https://github.com/Mathics3/Mathics3-pygments#egg=Mathics3-pygments
+          # We can comment out after next mathics-core release
+          # git clone --depth 1 https://github.com/Mathics3/mathics-core.git
+          # cd mathics-core/
+          # pip install --no-build-isolation -e .
+          # bash -x admin-tools/make-JSON-tables.sh
+          # cd ..
+      - name: Install mathicsscript
+        run: |
+          make
+      - name: Test mathicsscript
+        run: |
+          pip3 install -r requirements-dev.txt
+          make check

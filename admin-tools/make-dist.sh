@@ -19,11 +19,11 @@ cd ..
 source $PACKAGE/version.py
 echo $__version__
 
-pyversion=3.13
+pyversion=3.14
 if ! pyenv local $pyversion ; then
     exit $?
 fi
 rm -fr build
 python -m build --wheel
-python ./setup.py sdist
+python -m build --sdist
 finish

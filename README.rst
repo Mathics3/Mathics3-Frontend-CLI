@@ -2,11 +2,11 @@
 
 |Packaging status|
 
-mathicsscript is a command-line interface to `Mathics3 <https://mathics.org>`_.
+mathics3-script is a command-line interface to `Mathics3 <https://mathics.org>`_.
 
 |screenshot|
 
-See the `screenshot directory <https://github.com/Mathics3/mathicsscript/tree/master/screenshots>`_ for a description and another example.
+See the `screenshot directory <https://github.com/Mathics3/mathics3-script/tree/master/screenshots>`_ for a description and another example.
 
 
 Features
@@ -47,7 +47,7 @@ Once installed, run using ``mathicsscript``:
 
 
    $ mathicsscript
-   Mathicscript: 10.0.0, Mathics3 10.0.0
+   Mathics3-script: 10.0.0, Mathics3 10.0.0
    on CPython 3.14.3 (main, Mar 30 2026, 06:42:16) [GCC 13.3.0]
 
    Using:
@@ -80,7 +80,7 @@ To read from a file, in file ``/tmp/test.m``:
    integral=Integrate[1,x]
    Print["Results: ",{sum,integral}]
 
-Feeding this into ``mathicsscript``:
+Feeding this into ``Mathics3-script``:
 
 ::
 

@@ -9,6 +9,7 @@ from typing import Callable
 
 import networkx as nx
 from mathics.core.atoms import String
+from mathics.core.expression import BoxError, Expression
 from mathics.core.symbols import Symbol
 from mathics.core.systemsymbols import (
     SymbolAborted,
@@ -90,8 +91,6 @@ def format_output(obj, expr, format=None):
 
     if isinstance(format, dict):
         return dict((k, obj.format_output(expr, f)) for k, f in format.items())
-
-    from mathics.core.expression import BoxError, Expression
 
     expr_type = expr.get_head_name()
     expr_head = expr.get_head()

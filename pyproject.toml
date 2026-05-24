@@ -8,11 +8,11 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "mathicsscript"
+name = "Mathics3_script"
 description = "Command-line interface to Mathics3"
 dependencies = [
     "Mathics3_Scanner>=10.0.0",
-    "Mathics3 >= 10.0.0",
+    "Mathics3 >= 10.0.1",
     "click >= 8.0.0",
     "colorama",
     "columnize",
@@ -59,6 +59,7 @@ full = [
 
 [project.scripts]
  mathicsscript = "mathicsscript.__main__:main"
+ mathics3-script = "mathicsscript.__main__:main"
 "fake_psviewer.py" = "mathicsscript.fake_psviewer:main"
 
 [project.urls]
