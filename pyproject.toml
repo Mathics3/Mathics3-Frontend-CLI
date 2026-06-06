@@ -8,7 +8,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Mathics3_script"
+name = "Mathics3-Frontend-CLI"
 description = "Command-line interface to Mathics3"
 dependencies = [
     "Mathics3_Scanner>=10.0.0",
