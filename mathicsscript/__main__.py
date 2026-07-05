@@ -15,43 +15,24 @@
 
 import os
 import os.path as osp
-import subprocess
 import sys
 from pathlib import Path
-from typing import Any
 
 import click
-import mathics.core as mathics_core
 from mathics import license_string, settings, version_info
 from mathics.core.attributes import attribute_string_to_number
-from mathics.core.evaluation import Evaluation, Output
 from mathics.core.expression import from_python
+from mathics.core.evaluation import Evaluation
 from mathics.core.parser import MathicsFileLineFeeder
 from mathics.core.symbols import Symbol, SymbolNull, SymbolFalse, SymbolTrue
-from mathics.core.systemsymbols import SymbolTeXForm
+from mathicsscript.repl import TerminalOutput, interactive_eval_loop, readline_choices
 from mathics.session import autoload_files
 
-from mathics_scanner import replace_wl_with_plain_text
-from pygments import highlight
-
 from mathicsscript.asymptote import asymptote_version
-from mathicsscript.interrupt import setup_signal_handler
 from mathicsscript.settings import definitions
-from mathicsscript.termshell import ShellEscapeException, mma_lexer
 from mathicsscript.termshell_gnu import TerminalShellGNUReadline
-from mathicsscript.termshell import TerminalShellCommon
 from mathicsscript.termshell_prompt import TerminalShellPromptToolKit
 from mathicsscript.version import __version__
-
-try:
-    __import__("readline")
-except ImportError:
-    have_readline = False
-    readline_choices = ["Prompt", "None"]
-else:
-    readline_choices = ["GNU", "Prompt", "None"]
-    have_readline = True
-
 
 from mathicsscript.format import format_output, matplotlib_version
 
@@ -141,129 +122,6 @@ def load_settings_file(shell):
 
 
 Evaluation.format_output = format_output
-
-
-class TerminalOutput(Output):
-    def max_stored_size(self, settings):
-        return None
-
-    def __init__(self, shell):
-        self.shell = shell
-
-    def out(self, out):
-        return self.shell.out_callback(out)
-
-
-def interactive_eval_loop(
-    shell: TerminalShellCommon,
-    unicode,
-    prompt,
-    strict_wl_output: bool,
-):
-    setup_signal_handler()
-
-    def identity(x: Any) -> Any:
-        return x
-
-    def fmt_fun(query: Any) -> Any:
-        return highlight(str(query), mma_lexer, shell.terminal_formatter)
-
-    shell.fmt_fn = fmt_fun
-    while True:
-        try:
-            if have_readline and shell.using_readline:
-                import readline as GNU_readline
-
-                last_pos = GNU_readline.get_current_history_length()
-
-            full_form = definitions.get_ownvalue(
-                "Settings`$ShowFullFormInput"
-            ).to_python()
-            style = definitions.get_ownvalue("Settings`$PygmentsStyle")
-            fmt = identity
-            if style:
-                style = style.get_string_value()
-                if shell.terminal_formatter:
-                    fmt = fmt_fun
-            shell.pygments_style = style or "None"
-
-            evaluation = Evaluation(shell.definitions, output=TerminalOutput(shell))
-
-            # Store shell into the evaluation so that an interrupt handler
-            # has access to this
-            evaluation.shell = shell
-
-            query, source_code = evaluation.parse_feeder_returning_code(shell)
-            if mathics_core.PRE_EVALUATION_HOOK is not None:
-                mathics_core.PRE_EVALUATION_HOOK(query, evaluation)
-
-            if (
-                have_readline
-                and shell.using_readline
-                and hasattr(GNU_readline, "remove_history_item")
-            ):
-                current_pos = GNU_readline.get_current_history_length()
-                for pos in range(last_pos, current_pos - 1):
-                    try:
-                        GNU_readline.remove_history_item(pos)
-                    except ValueError:
-                        pass
-                wl_input = source_code.rstrip()
-                if unicode:
-                    wl_input = replace_wl_with_plain_text(wl_input)
-                GNU_readline.add_history(wl_input)
-
-            if query is None:
-                continue
-
-            if hasattr(query, "head") and query.head == SymbolTeXForm:
-                output_style = "//TeXForm"
-            else:
-                output_style = ""
-
-            if full_form:
-                print(fmt(query))
-            result = evaluation.evaluate(
-                query, timeout=settings.TIMEOUT, format="unformatted"
-            )
-            if result is not None:
-                shell.print_result(
-                    result, prompt, output_style, strict_wl_output=strict_wl_output
-                )
-
-        except ShellEscapeException as e:
-            source_code = e.line
-            if not settings.ENABLE_SYSTEM_COMMANDS:
-                shell.errmsg("System commands are disabled in sandboxed mode.")
-                continue
-            if len(source_code) and source_code[1] == "!":
-                try:
-                    print(open(source_code[2:], "r").read())
-                except Exception:
-                    shell.errmsg(str(sys.exc_info()[1]))
-            else:
-                subprocess.run(source_code[1:], shell=True)
-
-                # Should we test exit code for adding to history?
-                GNU_readline.add_history(source_code.rstrip())
-                # FIXME add this... when in Mathics3 core updated
-                shell.definitions.increment_line(1)
-
-        except KeyboardInterrupt:
-            shell.errmsg("\nKeyboardInterrupt")
-        except EOFError:
-            if prompt:
-                shell.errmsg("\n\nGoodbye!\n")
-            break
-        except SystemExit:
-            shell.errmsg("\n\nGoodbye!\n")
-            # raise to pass the error code on, e.g. Quit[1]
-            raise
-        finally:
-            # Reset the input line that would be shown in a parse error.
-            # This is not to be confused with the number of complete
-            # inputs that have been seen, i.e. In[]
-            shell.reset_lineno()
 
 
 case_sensitive = {"case_sensitive": False}

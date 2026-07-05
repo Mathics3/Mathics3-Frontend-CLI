@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-#   Copyright (C) 2020-2022, 2024, 2025 Rocky Bernstein <rb@dustyfeet.com>
+#   Copyright (C) 2020-2022, 2024, 2025-2026 Rocky Bernstein <rb@dustyfeet.com>
 
 import locale
 import os
 import os.path as osp
 import pathlib
+import sys
 from typing import Any, Union
 
 import mathics_scanner.location
@@ -18,7 +19,12 @@ from mathics.core.rules import Rule
 from mathics.core.symbols import Symbol, SymbolNull
 from mathics.core.systemsymbols import SymbolMessageName
 from mathics_scanner.location import ContainerKind
-from mathics.session import get_settings_value, set_settings_value
+from mathics.session import (
+    SessionShell,
+    autoload_files,
+    get_settings_value,
+    set_settings_value,
+)
 from mathics_pygments.lexer import MathematicaLexer, MToken
 from pygments import format, highlight, lex
 from pygments.formatters import Terminal256Formatter
@@ -60,6 +66,11 @@ if not osp.isfile(HISTFILE):
 SymbolPygmentsStylesAvailable = Symbol("Settings`PygmentsStylesAvailable")
 
 
+def get_srcdir():
+    filename = osp.normcase(osp.dirname(osp.abspath(__file__)))
+    return osp.realpath(filename)
+
+
 def is_pygments_style(style: str) -> bool:
     if style not in ALL_PYGMENTS_STYLES:
         print(f"Pygments style name '{style}' not found.")
@@ -73,13 +84,16 @@ class ShellEscapeException(Exception):
         self.line = line
 
 
-class TerminalShellCommon(MathicsLineFeeder):
+class TerminalShellCommon(MathicsLineFeeder, SessionShell):
     def __init__(
         self,
         definitions,
         want_completion: bool,
-        use_unicode: bool,
-        prompt: bool,
+        autoload=False,
+        prompt: str | None = None,
+        use_unicode: bool = False,
+        in_prefix: str = "In",
+        out_prefix: str = "Out",
     ):
         super().__init__([], ContainerKind.STREAM)
         self.input_encoding = locale.getpreferredencoding()
@@ -89,6 +103,9 @@ class TerminalShellCommon(MathicsLineFeeder):
         self.is_inside_interrupt = False
 
         self.lineno = 0
+        self.in_prefix = in_prefix
+        self.out_prefix = out_prefix
+
         self.terminal_formatter = None
         self.prompt = prompt
         self.want_completion = want_completion
@@ -129,6 +146,9 @@ class TerminalShellCommon(MathicsLineFeeder):
             "Settings`$UseUnicode", attribute_string_to_number["System`Locked"]
         )
 
+        if autoload:
+            autoload_files(definitions, get_srcdir(), "autoload-cli")
+
     def change_pygments_style(self, style: str):
         if not style or style == self.pygments_style:
             return False
@@ -155,7 +175,7 @@ class TerminalShellCommon(MathicsLineFeeder):
         return
 
     def feed(self):
-        prompt_str = self.in_prompt if self.prompt else ""
+        prompt_str = self.get_in_prompt() if self.prompt else ""
         result = self.read_line(prompt_str) + "\n"
         if mathics_scanner.location.TRACK_LOCATIONS and self.source_text is not None:
             self.container.append(self.source_text)
@@ -164,6 +184,22 @@ class TerminalShellCommon(MathicsLineFeeder):
         self.lineno += 1
         return result
 
+    # FIXME: reinstate as a property.
+    # For this, we need to change mathics-core repl.py and abstract class.
+    def get_in_prompt(self) -> Union[str, Any]:
+        """
+        Return the prompt string to be shown before reading input.
+        """
+        next_line_number = self.get_last_line_number() + 1
+        if self.lineno > 1:
+            return " " * len(f"{self.in_prefix}[{next_line_number}]:= ")
+        elif self.is_styled:
+            return "{2}{0}[{3}{1}{4}]:= {5}".format(
+                self.in_prefix, next_line_number, *self.incolors
+            )
+        else:
+            return f"In[{next_line_number}]:= "
+
     # prompt-toolkit returns a HTML object. Therefore, we include Any
     # to cover that.
     def get_out_prompt(self, form: str) -> Union[str, Any]:
@@ -171,23 +207,13 @@ class TerminalShellCommon(MathicsLineFeeder):
         Return a formatted "Out" string prefix. ``form`` is either the empty string if the
         default form, or the name of the Form which was used in output preceded by "//"
         """
-        line_number = self.last_line_number
+        line_number = self.get_last_line_number()
         if self.is_styled:
-            return "{2}Out[{3}{0}{4}]{5}{1}= ".format(
-                line_number, form, *self.outcolors
+            return "{3}{0}[{4}{1}{5}]{6}{2}= ".format(
+                self.in_prefix, line_number, form, *self.outcolors
             )
         else:
             return f"Out[{line_number}]= "
-
-    @property
-    def in_prompt(self) -> Union[str, Any]:
-        next_line_number = self.last_line_number + 1
-        if self.lineno > 0:
-            return " " * len(f"In[{next_line_number}]:= ")
-        elif self.is_styled:
-            return "{1}In[{2}{0}{3}]:= {4}".format(next_line_number, *self.incolors)
-        else:
-            return f"In[{next_line_number}]:= "
 
     @property
     def is_styled(self):
@@ -197,8 +223,9 @@ class TerminalShellCommon(MathicsLineFeeder):
         style = self.definitions.get_ownvalue("Settings`$PygmentsStyle")
         return not (style is SymbolNull or style.value == "None")
 
-    @property
-    def last_line_number(self) -> int:
+    # FIXME: reinstate as a property.
+    # For this, we need to change mathics-core repl.py and abstract class.
+    def get_last_line_number(self) -> int:
         """
         Return the next Out[] line number
         """
@@ -219,7 +246,11 @@ class TerminalShellCommon(MathicsLineFeeder):
         # return replace_unicode_with_wl(line)
 
     def print_result(
-        self, result, prompt: bool, output_style="", strict_wl_output=False
+        self,
+        result,
+        no_out_prompt: bool = False,
+        output_style="",
+        strict_wl_output=False,
     ):
         if result is None or result.last_eval is SymbolNull:
             # Following WMA CLI, if the result is `SymbolNull`, just print an empty line.
@@ -291,7 +322,7 @@ class TerminalShellCommon(MathicsLineFeeder):
                 else f"//{result.form}"
             )
             output = self.to_output(out_str, form)
-            if output_style == "text" or not prompt:
+            if output_style == "text" or not no_out_prompt:
                 print(output)
             else:
                 form = "" if result.form is None else f"//{result.form}"
@@ -347,7 +378,7 @@ class TerminalShellCommon(MathicsLineFeeder):
         """
         Format an 'Out=' line that it lines after the first one indent properly.
         """
-        line_number = self.last_line_number
+        line_number = self.get_last_line_number()
         if self.is_styled:
             newline = "\n" + " " * len(f"Out[{line_number}]{form}= ")
         else:
