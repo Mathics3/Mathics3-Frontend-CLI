@@ -34,15 +34,11 @@ jobs:
           # We can comment out after next Mathics3-pygments release
           # python -m pip install -e git+https://github.com/Mathics3/Mathics3-pygments#egg=Mathics3-pygments
           # We can comment out after next mathics-core release
-          # git clone --depth 1 https://github.com/Mathics3/mathics-core.git
-          # cd mathics-core/
-          # pip install --no-build-isolation -e .
-          # bash -x admin-tools/make-JSON-tables.sh
-          # cd ..
+          python -m pip install -e git+https://github.com/Mathics3/mathics-core#egg=Mathics3
       - name: Install mathicsscript
         run: |
           make
-      - name: Test mathicsscript
+      - name: Test Mathics3 script
         run: |
           pip3 install -r requirements-dev.txt
           make check
