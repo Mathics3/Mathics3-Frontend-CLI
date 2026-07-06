@@ -9,7 +9,7 @@ import re
 
 try:
     from readline import read_init_file
-except ImportError:
+except (ImportError, ModuleNotFoundError):
     # Not sure what to do here: nothing is probably safe.
     def read_init_file(_: str):
         return
@@ -37,7 +37,20 @@ try:
     )
 
     have_full_readline = True
-except ImportError:
+except (ImportError, ModuleNotFoundError):
+    have_full_readline = False
+
+    def null_fn(*_):
+        return
+
+    def write_history_file(_: str):
+        return
+
+    parse_and_bind = read_history_file = set_history_length = null_fn
+    set_completer = set_completer_delims = null_fn
+except Exception:
+    # Catch any other exceptions (like access violation on Windows)
+    # when readline module is present but broken/unusable
     have_full_readline = False
 
     def null_fn(*_):
