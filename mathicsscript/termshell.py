@@ -5,6 +5,7 @@ import locale
 import os
 import os.path as osp
 import pathlib
+import re
 import sys
 from typing import Any, Union
 
@@ -108,6 +109,7 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
 
         self.terminal_formatter = None
         self.prompt = prompt
+        self.using_readline = False
         self.want_completion = want_completion
 
         self.definitions = definitions
@@ -192,6 +194,10 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         """
         next_line_number = self.get_last_line_number() + 1
         if self.lineno > 1:
+            # We have a multi-line input and need to prompt for the next line.
+            # After the first "In[]"-prompted line, we do not repeat
+            # "In[]", but instead are indented with the
+            # corresponding spaces.
             return " " * len(f"{self.in_prefix}[{next_line_number}]:= ")
         elif self.is_styled:
             return "{2}{0}[{3}{1}{4}]:= {5}".format(
@@ -210,7 +216,7 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         line_number = self.get_last_line_number()
         if self.is_styled:
             return "{3}{0}[{4}{1}{5}]{6}{2}= ".format(
-                self.in_prefix, line_number, form, *self.outcolors
+                self.out_prefix, line_number, form, *self.outcolors
             )
         else:
             return f"Out[{line_number}]= "

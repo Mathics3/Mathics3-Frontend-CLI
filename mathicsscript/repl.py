@@ -62,7 +62,9 @@ def interactive_eval_loop(
     strict_wl_output: bool,
     init_signal_handler: bool = True,
 ):
-    setup_signal_handler()
+
+    if init_signal_handler:
+        setup_signal_handler()
 
     def identity(x: Any) -> Any:
         return x
@@ -76,7 +78,7 @@ def interactive_eval_loop(
     shell.fmt_fn = fmt_fun
     while True:
         try:
-            if have_readline and shell.using_readline:
+            if shell.using_readline:
                 import readline as GNU_readline
 
                 last_pos = GNU_readline.get_current_history_length()
@@ -95,7 +97,7 @@ def interactive_eval_loop(
             evaluation = Evaluation(shell.definitions, output=TerminalOutput(shell))
 
             # Store shell into the evaluation so that an interrupt handler
-            # has access to this
+            # has access to this.
             evaluation.shell = shell
 
             query, source_code = evaluation.parse_feeder_returning_code(shell)

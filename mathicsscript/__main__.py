@@ -30,11 +30,18 @@ from mathics.session import autoload_files
 
 from mathicsscript.asymptote import asymptote_version
 from mathicsscript.settings import definitions
-from mathicsscript.termshell_gnu import TerminalShellGNUReadline
-from mathicsscript.termshell_prompt import TerminalShellPromptToolKit
+from mathicsscript.termshell import TerminalShellCommon
 from mathicsscript.version import __version__
 
 from mathicsscript.format import format_output, matplotlib_version
+
+try:
+    import readline
+
+    have_readline = True
+except ImportError:
+    have_readline = False
+
 
 version_string = """Mathics3 {mathics}
 on {python}
@@ -319,14 +326,17 @@ def main(
 
     readline = "none" if (code or file and not persist) else readline.lower()
     if readline == "prompt":
+        from mathicsscript.termshell_prompt import TerminalShellPromptToolKit
+
         shell = TerminalShellPromptToolKit(
             definitions, completion, charset, prompt, edit_mode
         )
+    elif readline == "gnu":
+        from mathicsscript.termshell_gnu import TerminalShellGNUReadline
+
+        shell = TerminalShellGNUReadline(definitions, completion, charset, prompt)
     else:
-        want_readline = readline == "gnu"
-        shell = TerminalShellGNUReadline(
-            definitions, want_readline, completion, charset, prompt
-        )
+        shell = TerminalShellCommon(definitions, False, charset, prompt)
 
     load_settings_file(shell)
     style_from_settings_file = definitions.get_ownvalue("Settings`$PygmentsStyle")
