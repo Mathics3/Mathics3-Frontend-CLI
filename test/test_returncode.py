@@ -1,6 +1,14 @@
+import pytest
+import sys
 import subprocess
 
 import os.path as osp
+
+# FIXME: We need to come up with some other sort of test.
+pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="This module is not supported or required on MS Windows",
+)
 
 
 def get_testdir():
