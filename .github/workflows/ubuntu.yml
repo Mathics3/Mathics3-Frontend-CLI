@@ -33,7 +33,7 @@ jobs:
           # We can comment out after next Mathics3-pygments release
           # python -m pip install -e git+https://github.com/Mathics3/Mathics3-pygments#egg=Mathics3-pygments
           # We can comment out after next mathics-core release
-          python -m pip install -e git+https://github.com/Mathics3/mathics-core@Terminal-tweaks#egg=Mathics3
+          python -m pip install -e git+https://github.com/Mathics3/mathics-core#egg=Mathics3
       - name: Install mathicsscript
         run: |
           make
