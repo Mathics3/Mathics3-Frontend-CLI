@@ -7,14 +7,7 @@ import os.path as osp
 import sys
 import re
 
-try:
-    from readline import read_init_file
-except ImportError:
-    # Not sure what to do here: nothing is probably safe.
-    def read_init_file(_: str):
-        return
-
-
+from readline import read_init_file
 from typing import Final
 from mathicsscript.bindkeys import read_inputrc
 from mathicsscript.termshell import (
@@ -23,32 +16,20 @@ from mathicsscript.termshell import (
     TerminalShellCommon,
     USER_INPUTRC,
 )
+
 from mathics.core.symbols import strip_context
 from mathicsscript.settings import NAMED_CHARACTERS
 
-try:
-    from readline import (
-        parse_and_bind,
-        read_history_file,
-        set_completer,
-        set_completer_delims,
-        set_history_length,
-        write_history_file,
-    )
+from readline import (
+    parse_and_bind,
+    read_history_file,
+    set_completer,
+    set_completer_delims,
+    set_history_length,
+    write_history_file,
+)
 
-    have_full_readline = True
-except ImportError:
-    have_full_readline = False
-
-    def null_fn(*_):
-        return
-
-    def write_history_file(_: str):
-        return
-
-    parse_and_bind = read_history_file = set_history_length = null_fn
-    set_completer = set_completer_delims = null_fn
-
+have_full_readline = True
 
 RL_COMPLETER_DELIMS_WITH_BRACE: Final[str] = " \t\n_~!@#%^&*()-=+{]}|;:'\",<>/?"
 RL_COMPLETER_DELIMS: Final[str] = " \t\n_~!@#%^&*()-=+[{]}\\|;:'\",<>/?"
@@ -60,17 +41,15 @@ class TerminalShellGNUReadline(TerminalShellCommon):
     def __init__(
         self,
         definitions,
-        want_readline: bool,
         want_completion: bool,
         use_unicode: bool,
-        prompt: bool,
+        prompt: str,
     ):
         super().__init__(definitions, want_completion, use_unicode, prompt)
 
-        # Try importing readline to enable arrow keys support etc.
-        self.using_readline = False
+        self.using_readline = True
         self.history_length = definitions.get_config_value("$HistoryLength", HISTSIZE)
-        if have_full_readline and want_readline:
+        if have_full_readline:
             self.using_readline = sys.stdin.isatty() and sys.stdout.isatty()
             self.ansi_color_re = re.compile("\033\\[[0-9;]+m")
             if want_completion:

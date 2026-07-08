@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#   Copyright (C) 2021-2022, 2025 Rocky Bernstein <rb@dustyfeet.com>
+#   Copyright (C) 2021-2022, 2025-2026 Rocky Bernstein <rb@dustyfeet.com>
 
 import os
 import os.path as osp
@@ -129,25 +129,36 @@ class TerminalShellPromptToolKit(TerminalShellCommon):
         default form, or the name of the Form which was used in output if it wasn't then
         default form.
         """
-        line_number = self.last_line_number
+        line_number = self.get_last_line_number()
         if self.is_styled:
-            return HTML(f"<ansigreen>Out[<b>{line_number}</b>]</ansigreen>{form}= ")
+            return HTML(
+                f"<ansigreen>{self.out_prefix}[<b>{line_number}</b>]</ansigreen>{form}= "
+            )
         else:
-            return HTML(f"Out[<b>{line_number}</b>]= ")
+            return HTML(f"{self.out_prefix}[<b>{line_number}</b>]= ")
 
-    @property
-    def in_prompt(self) -> Union[str, HTML]:
-        next_line_number = self.last_line_number + 1
-        if self.lineno > 0:
-            return " " * len(f"In[{next_line_number}]:= ")
+    def get_in_prompt(self) -> Union[str, HTML]:
+        next_line_number = self.get_last_line_number() + 1
+        if self.lineno > 1:
+            # We have a multi-line input and need to prompt for the next line.
+            # After the first "In[]"-prompted line, we do not repeat
+            # "In[]", but instead are indented with the
+            # corresponding spaces.
+            return " " * len(f"{self.in_prefix}[{next_line_number}]:= ")
         else:
             if self.is_styled:
-                return HTML(f"<ansired>In[<b>{next_line_number}</b>]:=</ansired> ")
+                return HTML(
+                    f"<ansired>{self.in_prefix}[<b>{next_line_number}</b>]:=</ansired> "
+                )
             else:
-                return HTML(f"In[<b>{next_line_number}</b>]:= ")
+                return HTML(f"{self.in_prefix}[<b>{next_line_number}</b>]:= ")
 
     def print_result(
-        self, result, prompt: bool, output_style="", strict_wl_output=False
+        self,
+        result,
+        no_out_prompt: bool = False,
+        output_style="",
+        strict_wl_output=False,
     ):
         if result is None or result.last_eval is SymbolNull:
             # Following WMA CLI, if the result is `SymbolNull`, just print an empty line.
@@ -201,7 +212,7 @@ class TerminalShellPromptToolKit(TerminalShellCommon):
                         out_str = highlight(out_str, mma_lexer, self.terminal_formatter)
 
             output = self.to_output(out_str, form="")
-            if output_style == "text" or not prompt:
+            if output_style == "text" or not no_out_prompt:
                 print(output)
             elif self.session:
                 form = (
