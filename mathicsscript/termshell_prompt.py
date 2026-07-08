@@ -129,7 +129,7 @@ class TerminalShellPromptToolKit(TerminalShellCommon):
         default form, or the name of the Form which was used in output if it wasn't then
         default form.
         """
-        line_number = self.get_last_line_number()
+        line_number = self.last_line_number
         if self.is_styled:
             return HTML(
                 f"<ansigreen>{self.out_prefix}[<b>{line_number}</b>]</ansigreen>{form}= "
@@ -137,8 +137,12 @@ class TerminalShellPromptToolKit(TerminalShellCommon):
         else:
             return HTML(f"{self.out_prefix}[<b>{line_number}</b>]= ")
 
-    def get_in_prompt(self) -> Union[str, HTML]:
-        next_line_number = self.get_last_line_number() + 1
+    @property
+    def in_prompt(self) -> Union[str, HTML]:
+        """
+        Return the prompt string to be shown before reading input.
+        """
+        next_line_number = self.last_line_number + 1
         if self.lineno > 1:
             # We have a multi-line input and need to prompt for the next line.
             # After the first "In[]"-prompted line, we do not repeat
