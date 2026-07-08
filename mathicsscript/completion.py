@@ -122,7 +122,7 @@ class Mathics3Completer(WordCompleter):
         # Get word/text before cursor.
         word_before_cursor, kind = self.get_word_before_cursor_with_kind(document)
         if kind == TokenKind.Symbol:
-            words = self.get_word_names()
+            words = self.word_names
         elif kind == TokenKind.NamedCharacter:
             words = self.named_characters
         elif kind == TokenKind.ASCII_Operator:
@@ -194,7 +194,8 @@ class Mathics3Completer(WordCompleter):
 
         return word_before_cursor, TokenKind.Symbol
 
-    def get_word_names(self) -> List[str]:
+    @property
+    def word_names(self) -> List[str]:
         names = self.definitions.get_names()
         short_names = [strip_context(m) for m in names]
         return list(names) + short_names

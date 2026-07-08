@@ -177,7 +177,7 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         return
 
     def feed(self):
-        prompt_str = self.get_in_prompt() if self.prompt else ""
+        prompt_str = self.in_prompt if self.prompt else ""
         result = self.read_line(prompt_str) + "\n"
         if mathics_scanner.location.TRACK_LOCATIONS and self.source_text is not None:
             self.container.append(self.source_text)
@@ -186,13 +186,12 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         self.lineno += 1
         return result
 
-    # FIXME: reinstate as a property.
-    # For this, we need to change mathics-core repl.py and abstract class.
-    def get_in_prompt(self) -> Union[str, Any]:
+    @property
+    def in_prompt(self) -> Union[str, Any]:
         """
         Return the prompt string to be shown before reading input.
         """
-        next_line_number = self.get_last_line_number() + 1
+        next_line_number = self.last_line_number + 1
         if self.lineno > 1:
             # We have a multi-line input and need to prompt for the next line.
             # After the first "In[]"-prompted line, we do not repeat
@@ -213,7 +212,7 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         Return a formatted "Out" string prefix. ``form`` is either the empty string if the
         default form, or the name of the Form which was used in output preceded by "//"
         """
-        line_number = self.get_last_line_number()
+        line_number = self.last_line_number
         if self.is_styled:
             return "{3}{0}[{4}{1}{5}]{6}{2}= ".format(
                 self.out_prefix, line_number, form, *self.outcolors
@@ -229,9 +228,8 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         style = self.definitions.get_ownvalue("Settings`$PygmentsStyle")
         return not (style is SymbolNull or style.value == "None")
 
-    # FIXME: reinstate as a property.
-    # For this, we need to change mathics-core repl.py and abstract class.
-    def get_last_line_number(self) -> int:
+    @property
+    def last_line_number(self) -> int:
         """
         Return the next Out[] line number
         """
@@ -384,7 +382,7 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         """
         Format an 'Out=' line that it lines after the first one indent properly.
         """
-        line_number = self.get_last_line_number()
+        line_number = self.last_line_number
         if self.is_styled:
             newline = "\n" + " " * len(f"Out[{line_number}]{form}= ")
         else:
