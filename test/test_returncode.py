@@ -31,7 +31,3 @@ def test_returncode():
         ).returncode
         == 0
     )
-
-
-if __name__ == "__main__":
-    test_returncode()

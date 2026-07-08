@@ -35,7 +35,7 @@ from mathicsscript.termshell import ShellEscapeException, mma_lexer
 from mathicsscript.interrupt import setup_signal_handler
 
 try:
-    __import__("readline")
+    import readline as GNU_readline
 except ImportError:
     have_readline = False
     readline_choices = ["Prompt", "None"]
@@ -50,6 +50,8 @@ class TerminalOutput(Output):
 
     def __init__(self, shell):
         self.shell = shell
+        if not have_readline:
+            shell.using_readline = False
 
     def out(self, out):
         return self.shell.out_callback(out)
@@ -79,8 +81,6 @@ def interactive_eval_loop(
     while True:
         try:
             if shell.using_readline:
-                import readline as GNU_readline
-
                 last_pos = GNU_readline.get_current_history_length()
 
             full_form = definitions.get_ownvalue(
