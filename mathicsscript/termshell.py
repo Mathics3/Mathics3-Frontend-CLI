@@ -5,7 +5,6 @@ import locale
 import os
 import os.path as osp
 import pathlib
-import re
 import sys
 from typing import Any, Union
 
@@ -107,6 +106,10 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         self.in_prefix = in_prefix
         self.out_prefix = out_prefix
 
+        # Keep track of whether input of a command spans more than one line.
+        # In prompting we omit "In[x]:= after the first line.
+        self.multiline_input = False
+
         self.terminal_formatter = None
         self.prompt = prompt
         self.using_readline = False
@@ -179,6 +182,7 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
     def feed(self):
         prompt_str = self.in_prompt if self.prompt else ""
         result = self.read_line(prompt_str) + "\n"
+        self.multiline_input = True
         if mathics_scanner.location.TRACK_LOCATIONS and self.source_text is not None:
             self.container.append(self.source_text)
         if result == "\n":
@@ -191,19 +195,19 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
         """
         Return the prompt string to be shown before reading input.
         """
-        next_line_number = self.last_line_number + 1
-        if self.lineno > 1:
+        line_number = self.last_line_number
+        if self.multiline_input:
             # We have a multi-line input and need to prompt for the next line.
             # After the first "In[]"-prompted line, we do not repeat
             # "In[]", but instead are indented with the
             # corresponding spaces.
-            return " " * len(f"{self.in_prefix}[{next_line_number}]:= ")
+            return " " * len(f"{self.in_prefix}[{line_number}]:= ")
         elif self.is_styled:
             return "{2}{0}[{3}{1}{4}]:= {5}".format(
-                self.in_prefix, next_line_number, *self.incolors
+                self.in_prefix, line_number, *self.incolors
             )
         else:
-            return f"In[{next_line_number}]:= "
+            return f"In[{line_number}]:= "
 
     # prompt-toolkit returns a HTML object. Therefore, we include Any
     # to cover that.

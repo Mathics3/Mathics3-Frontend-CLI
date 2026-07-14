@@ -296,7 +296,7 @@ def main(
         for ext in pyextensions:
             extension_modules.append(ext)
 
-    definitions.set_line_no(0)
+    definitions.set_line_no(1)
     # Set a default value for $ShowFullFormInput to False.
     # Then, it can be changed by the settings file (in WL)
     # and overwritten by the command line parameter.
@@ -373,7 +373,7 @@ def main(
                 print(f"\nError reading {file}: {e}; skipping reading.")
                 file = None
             else:
-                definitions.set_line_no(0)
+                definitions.set_line_no(1)
 
     if code:
         for expr in code:
@@ -439,7 +439,7 @@ def main(
         "Settings`MathicsScriptVersion", attribute_string_to_number["System`Locked"]
     )
 
-    definitions.set_line_no(0)
+    definitions.set_line_no(1)
     interactive_eval_loop(shell, charset, prompt, strict_wl_output)
     return exit_rc
 

@@ -47,6 +47,7 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = [
+    "pre-commit",
     "pytest",
 ]
 full = [
