@@ -154,7 +154,7 @@ def interactive_eval_loop(
                 # Should we test exit code for adding to history?
                 GNU_readline.add_history(source_code.rstrip())
                 # FIXME add this... when in Mathics3 core updated
-                shell.definitions.increment_line(1)
+                shell.definitions.increment_line_no(1)
 
         except KeyboardInterrupt:
             shell.errmsg("\nKeyboardInterrupt")
