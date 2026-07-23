@@ -15,7 +15,7 @@ from mathics.core.atoms import String
 from mathics.core.attributes import attribute_string_to_number
 from mathics.core.expression import Expression, from_python  # strip_context,
 from mathics.core.parser import MathicsLineFeeder
-from mathics.core.rules import Rule
+from mathics.core.rules import RewriteRule
 from mathics.core.symbols import Symbol, SymbolNull
 from mathics.core.systemsymbols import SymbolMessageName
 from mathics_scanner.location import ContainerKind
@@ -127,7 +127,7 @@ class TerminalShellCommon(MathicsLineFeeder, SessionShell):
 
         self.definitions.add_message(
             "Settings`PygmentsStylesAvailable",
-            Rule(
+            RewriteRule(
                 Expression(
                     SymbolMessageName,
                     SymbolPygmentsStylesAvailable,
