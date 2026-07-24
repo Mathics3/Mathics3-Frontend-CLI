@@ -1,4 +1,4 @@
-|CI status| |PyPI Installs| |Latest Version| |Supported Python Versions|
+|CI status| |PyPI Installs| |Latest Version| |Supported Python Versions| |Anaconda|
 
 |Packaging status|
 
@@ -36,6 +36,19 @@ To install from git sources, so that you run from the git source tree:
 ::
 
     $ make develop
+
+Installing from Anaconda/Mamba
+------------------------------
+
+::
+
+    conda install conda-forge::mathics3-frontend-cli
+
+or, with mamba
+
+::
+
+    mamba install conda-forge::mathics3-frontend-cli
 
 
 Running
@@ -149,3 +162,5 @@ the core Mathic3 package.
 		       :target: https://github.com/Mathics3/mathicsscript/actions
 .. |Packaging status| image:: https://repology.org/badge/vertical-allrepos/mathicsscript.svg
 			    :target: https://repology.org/project/mathicsscript/versions
+.. |Anaconda| image:: https://anaconda.org/conda-forge/mathics3-frontend-cli/badges/version.svg
+
