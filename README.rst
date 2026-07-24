@@ -44,6 +44,12 @@ Installing from Anaconda/Mamba
 
     conda install conda-forge::mathics3-frontend-cli
 
+or, with mamba
+
+::
+
+    mamba install conda-forge::mathics3-frontend-cli
+
 
 Running
 -------
