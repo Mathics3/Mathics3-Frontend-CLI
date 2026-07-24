@@ -41,8 +41,9 @@ Installing from Anaconda/Mamba
 ------------------------------
 
 ::
-conda install conda-forge::mathics3-frontend-cli
-::
+
+```conda install conda-forge::mathics3-frontend-cli```
+
 
 Running
 -------
