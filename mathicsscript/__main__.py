@@ -13,6 +13,8 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import atexit
+import gc
 import os
 import os.path as osp
 import sys
@@ -283,12 +285,20 @@ def main(
     asymptote,
     matplotlib,
 ) -> int:
-    """A command-line interface to Mathics.
+    """A command-line interface to Mathics3.
 
     Mathics3 is a general-purpose computer algebra system.
     """
 
     exit_rc = 0
+
+    # Registered first, so it runs last among the atexit handlers.
+    # Freezing moves every tracked object into the permanent generation,
+    # so the collection in Py_Finalize() does not walk the large
+    # Generation 2 graph left by packages such as Rubi. Unlike os._exit(),
+    # the other atexit handlers, stream flushes and exit codes are kept.
+    atexit.register(gc.freeze)
+
     quit_command = "CTRL-BREAK" if sys.platform == "win32" else "CONTROL-D"
 
     extension_modules = []
@@ -296,7 +306,7 @@ def main(
         for ext in pyextensions:
             extension_modules.append(ext)
 
-    definitions.set_line_no(1)
+    definitions.set_line_no(0)
     # Set a default value for $ShowFullFormInput to False.
     # Then, it can be changed by the settings file (in WL)
     # and overwritten by the command line parameter.
@@ -373,7 +383,7 @@ def main(
                 print(f"\nError reading {file}: {e}; skipping reading.")
                 file = None
             else:
-                definitions.set_line_no(1)
+                definitions.set_line_no(0)
 
     if code:
         for expr in code:
@@ -439,7 +449,7 @@ def main(
         "Settings`MathicsScriptVersion", attribute_string_to_number["System`Locked"]
     )
 
-    definitions.set_line_no(1)
+    definitions.set_line_no(0)
     interactive_eval_loop(shell, charset, prompt, strict_wl_output)
     return exit_rc
 

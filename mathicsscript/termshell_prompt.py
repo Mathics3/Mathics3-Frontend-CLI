@@ -142,7 +142,7 @@ class TerminalShellPromptToolKit(TerminalShellCommon):
         """
         Return the prompt string to be shown before reading input.
         """
-        next_line_number = self.last_line_number + 1
+        next_line_number = self.last_line_number
         if self.lineno > 1:
             # We have a multi-line input and need to prompt for the next line.
             # After the first "In[]"-prompted line, we do not repeat
